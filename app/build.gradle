@@ -1,0 +1,129 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+group = 'com.vica.pets'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+
+    maven {
+        url = 'https://oss.sonatype.org/content/repositories/snapshots'
+    }
+}
+
+ext {
+    light4jVersion = '2.2.1'
+    jacksonVersion = '2.18.3'
+    logbackVersion = '1.5.18'
+    logstashVersion = '7.0.1'
+    junitVersion = '5.11.3'
+    undertowVersion = '2.3.18.Final'
+    jsonSchemaValidatorVersion = '1.5.1'
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
+application {
+    mainClass = 'com.networknt.server.Server'
+}
+
+dependencies {
+
+    // light-4j
+    implementation "com.networknt:config:${light4jVersion}"
+    implementation "com.networknt:utility:${light4jVersion}"
+    implementation "com.networknt:security:${light4jVersion}"
+    implementation "com.networknt:client:${light4jVersion}"
+    implementation "com.networknt:audit:${light4jVersion}"
+    implementation "com.networknt:info:${light4jVersion}"
+    implementation "com.networknt:health:${light4jVersion}"
+    implementation "com.networknt:status:${light4jVersion}"
+    implementation "com.networknt:exception:${light4jVersion}"
+    implementation "com.networknt:body:${light4jVersion}"
+    implementation "com.networknt:dump:${light4jVersion}"
+    implementation "com.networknt:mask:${light4jVersion}"
+    implementation "com.networknt:metrics:${light4jVersion}"
+    implementation "com.networknt:handler:${light4jVersion}"
+    implementation "com.networknt:sanitizer:${light4jVersion}"
+    implementation "com.networknt:config-reload:${light4jVersion}"
+    implementation "com.networknt:traceability:${light4jVersion}"
+    implementation "com.networknt:correlation:${light4jVersion}"
+    implementation "com.networknt:service:${light4jVersion}"
+    implementation "com.networknt:registry:${light4jVersion}"
+    implementation "com.networknt:balance:${light4jVersion}"
+    implementation "com.networknt:cluster:${light4jVersion}"
+    implementation "com.networknt:portal-registry:${light4jVersion}"
+    implementation "com.networknt:logger-handler:${light4jVersion}"
+    implementation "com.networknt:decryptor:${light4jVersion}"
+    implementation "com.networknt:cache-manager:${light4jVersion}"
+    implementation "com.networknt:caffeine-cache:${light4jVersion}"
+    implementation "com.networknt:cache-explorer:${light4jVersion}"
+    implementation "com.networknt:server:${light4jVersion}"
+
+    implementation "com.networknt:json-schema-validator:${jsonSchemaValidatorVersion}"
+
+    implementation "com.networknt:openapi-parser:${light4jVersion}"
+    implementation "com.networknt:openapi-meta:${light4jVersion}"
+    implementation "com.networknt:openapi-security:${light4jVersion}"
+    implementation "com.networknt:openapi-validator:${light4jVersion}"
+    implementation "com.networknt:specification:${light4jVersion}"
+    implementation "com.networknt:http-entity:${light4jVersion}"
+
+    // Jackson
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    implementation "com.fasterxml.jackson.core:jackson-core:${jacksonVersion}"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonVersion}"
+
+    // Logging
+    implementation "ch.qos.logback:logback-classic:${logbackVersion}"
+    implementation "net.logstash.logback:logstash-logback-encoder:${logstashVersion}"
+
+    // Undertow
+    implementation "io.undertow:undertow-core:${undertowVersion}"
+
+    // Tests
+    testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}
+
+jar {
+    manifest {
+        attributes(
+                'Main-Class': application.mainClass.get()
+        )
+    }
+}
+
+tasks.register('fatJar', Jar) {
+
+    archiveBaseName = 'server'
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    manifest {
+        attributes(
+                'Main-Class': application.mainClass.get()
+        )
+    }
+
+    from {
+        configurations.runtimeClasspath.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+
+    with jar
+}
+
+tasks.named('build') {
+    dependsOn tasks.named('fatJar')
+}
